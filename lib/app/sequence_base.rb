@@ -810,7 +810,28 @@ module Inferno
         end.compact
       end
 
+      def resolve_path_comma_delimited(elements, paths)
+        results_found = []
+        paths.split(',').each do |path|
+          results_found += resolve_path(elements, path)
+        end
+        results_found
+      end
+
+      def resolve_element_from_paths_comma_delimited(element, paths)
+        paths.split(',').each do |path|
+          el_found = if block_given?
+                       resolve_element_from_path(element, path)  { |value_found| yield(value_found) }
+                     else
+                       resolve_element_from_path(element, path)
+                     end
+          return el_found if el_found.present?
+        end
+        nil
+      end
+
       def resolve_element_from_path(element, path)
+        binding.pry if path.include? ','
         el_as_array = Array.wrap(element)
         if path.empty?
           return nil if element.nil?

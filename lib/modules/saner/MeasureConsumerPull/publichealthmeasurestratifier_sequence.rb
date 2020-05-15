@@ -19,19 +19,19 @@ module Inferno
         case property
 
         when 'url'
-          values_found = resolve_path(resource, 'url')
+          values_found = resolve_path_comma_delimited(resource, 'url')
           values = value.split(/(?<!\\),/).each { |str| str.gsub!('\,', ',') }
           match_found = values_found.any? { |value_in_resource| values.include? value_in_resource }
           assert match_found, "url in Measure/#{resource.id} (#{values_found}) does not match url requested (#{value})"
 
         when 'code'
-          values_found = resolve_path(resource, 'topic.coding.code')
+          values_found = resolve_path_comma_delimited(resource, 'topic.coding.code,group.code.coding.code,group.population.code.coding.code,group.stratifier.code.coding.code,group.stratifier.component.code.coding.code,supplementalData.code.coding.code')
           values = value.split(/(?<!\\),/).each { |str| str.gsub!('\,', ',') }
           match_found = values_found.any? { |value_in_resource| values.include? value_in_resource }
           assert match_found, "code in Measure/#{resource.id} (#{values_found}) does not match code requested (#{value})"
 
         when 'definition-text'
-          values_found = resolve_path(resource, 'title')
+          values_found = resolve_path_comma_delimited(resource, 'title,subtitle,publisher,description,purpose,usage,riskAdjustment,rateAggregation,clinicalRecommendationStatement,definition,guideance')
           values = value.split(/(?<!\\),/).each { |str| str.gsub!('\,', ',') }
           match_found = values_found.any? { |value_in_resource| values.include? value_in_resource }
           assert match_found, "definition-text in Measure/#{resource.id} (#{values_found}) does not match definition-text requested (#{value})"
@@ -73,9 +73,11 @@ module Inferno
           versions :r4
         end
 
+        url_value = resolve_element_from_paths_comma_delimited(@resource_found, 'url') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          'url': get_value_for_search_param(resolve_element_from_path(@resource_found, 'url') { |el| get_value_for_search_param(el).present? })
+          'url': get_value_for_search_param(url_value)
         }
+
         skip 'Could not find parameter value for ["url"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('Measure'), search_params)
@@ -103,9 +105,11 @@ module Inferno
           versions :r4
         end
 
+        code_value = resolve_element_from_paths_comma_delimited(@resource_found, 'topic,group.code,group.population.code,group.stratifier.code,group.stratifier.component.code,supplementalData.code') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          'code': get_value_for_search_param(resolve_element_from_path(@resource_found, 'topic') { |el| get_value_for_search_param(el).present? })
+          'code': get_value_for_search_param(code_value)
         }
+
         skip 'Could not find parameter value for ["code"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('Measure'), search_params)
@@ -133,9 +137,11 @@ module Inferno
           versions :r4
         end
 
+        definition_text_value = resolve_element_from_paths_comma_delimited(@resource_found, 'title,subtitle,publisher,description,purpose,usage,riskAdjustment,rateAggregation,clinicalRecommendationStatement,definition,guideance') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          'definition-text': get_value_for_search_param(resolve_element_from_path(@resource_found, 'title') { |el| get_value_for_search_param(el).present? })
+          'definition-text': get_value_for_search_param(definition_text_value)
         }
+
         skip 'Could not find parameter value for ["definition-text"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('Measure'), search_params)

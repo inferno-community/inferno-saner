@@ -33,28 +33,43 @@ module Inferno
       end
 
       def get_search_params(search_parameters, sequence)
-        search_params = get_search_param_hash(search_parameters, sequence)
+        param_values = search_parameters.map do |param|
+          search_param_description = sequence[:search_param_descriptions][param.to_sym]
+          expressions = search_param_description[:expression]
+            .map { |expression| expression.gsub(/(?<!\w)class(?!\w)/, 'local_class')}
+            .map { |expression| expression.split('.').slice(1..-1).join('.')}
+
+          "#{param.gsub('-','_')}_value = resolve_element_from_paths_comma_delimited(@resource_found, '#{expressions.join(',')}') { |el| get_value_for_search_param(el).present? }"
+        end
+
+        search_params= search_parameters.map do |param|
+          "'#{param}': get_value_for_search_param(#{param.gsub('-','_')}_value)"
+        end
+
         search_param_string = %(
+          #{param_values.join("\n")}
           search_params = {
-            #{search_params.map { |param, value| "'#{param}': #{value}" }.join(",\n")}
-          })
+            #{search_params.join(",\n")}
+          }
+        )
 
         search_param_string
       end
 
-      def get_search_param_hash(search_parameters, sequence)
-        search_parameters.each_with_object({}) do |param, params|
-          search_param_description = sequence[:search_param_descriptions][param.to_sym]
-          params[param] =
-            "get_value_for_search_param(#{resolve_element_path(search_param_description, sequence[:delayed_sequence])} { |el| get_value_for_search_param(el).present? })"
+      def structure_to_string(struct)
+        if struct.is_a? Hash
+          %({
+            #{struct.map { |k, v| "#{k}: #{structure_to_string(v)}" }.join(",\n")}
+          })
+        elsif struct.is_a? Array
+          %([
+            #{struct.map { |el| structure_to_string(el) }.join(",\n")}
+          ])
+        elsif struct.is_a? String
+          "'#{struct}'"
+        else
+          "''"
         end
-      end
-
-      def resolve_element_path(search_param_description, _delayed_sequence)
-        element_path = search_param_description[:path].gsub(/(?<!\w)class(?!\w)/, 'local_class')
-        path_parts = element_path.split('.')
-        path_parts.shift
-        "resolve_element_from_path(@resource_found, '#{path_parts.join('.')}')"
       end
     end
   end

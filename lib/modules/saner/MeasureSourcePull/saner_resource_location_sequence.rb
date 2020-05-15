@@ -19,30 +19,30 @@ module Inferno
         case property
 
         when '_id'
-          values_found = resolve_path(resource, 'id')
+          values_found = resolve_path_comma_delimited(resource, 'id')
           values = value.split(/(?<!\\),/).each { |str| str.gsub!('\,', ',') }
           match_found = values_found.any? { |value_in_resource| values.include? value_in_resource }
           assert match_found, "_id in Location/#{resource.id} (#{values_found}) does not match _id requested (#{value})"
 
         when '_lastUpdated'
-          values_found = resolve_path(resource, 'meta.lastUpdated')
+          values_found = resolve_path_comma_delimited(resource, 'meta.lastUpdated')
           match_found = values_found.any? { |date| validate_date_search(value, date) }
           assert match_found, "_lastUpdated in Location/#{resource.id} (#{values_found}) does not match _lastUpdated requested (#{value})"
 
         when 'name'
-          values_found = resolve_path(resource, 'name')
+          values_found = resolve_path_comma_delimited(resource, 'name,alias')
           values = value.split(/(?<!\\),/).each { |str| str.gsub!('\,', ',') }
           match_found = values_found.any? { |value_in_resource| values.include? value_in_resource }
           assert match_found, "name in Location/#{resource.id} (#{values_found}) does not match name requested (#{value})"
 
         when 'identifier'
-          values_found = resolve_path(resource, 'identifier.value')
+          values_found = resolve_path_comma_delimited(resource, 'identifier.value')
           values = value.split(/(?<!\\),/).each { |str| str.gsub!('\,', ',') }
           match_found = values_found.any? { |value_in_resource| values.include? value_in_resource }
           assert match_found, "identifier in Location/#{resource.id} (#{values_found}) does not match identifier requested (#{value})"
 
         when 'address'
-          values_found = resolve_path(resource, 'address')
+          values_found = resolve_path_comma_delimited(resource, 'address')
           match_found = values_found.any? do |address|
             address&.text&.start_with?(value) ||
               address&.city&.start_with?(value) ||
@@ -53,31 +53,31 @@ module Inferno
           assert match_found, "address in Location/#{resource.id} (#{values_found}) does not match address requested (#{value})"
 
         when 'address-city'
-          values_found = resolve_path(resource, 'address.city')
+          values_found = resolve_path_comma_delimited(resource, 'address.city')
           values = value.split(/(?<!\\),/).each { |str| str.gsub!('\,', ',') }
           match_found = values_found.any? { |value_in_resource| values.include? value_in_resource }
           assert match_found, "address-city in Location/#{resource.id} (#{values_found}) does not match address-city requested (#{value})"
 
         when 'address-country'
-          values_found = resolve_path(resource, 'address.country')
+          values_found = resolve_path_comma_delimited(resource, 'address.country')
           values = value.split(/(?<!\\),/).each { |str| str.gsub!('\,', ',') }
           match_found = values_found.any? { |value_in_resource| values.include? value_in_resource }
           assert match_found, "address-country in Location/#{resource.id} (#{values_found}) does not match address-country requested (#{value})"
 
         when 'address-postalcode'
-          values_found = resolve_path(resource, 'address.postalCode')
+          values_found = resolve_path_comma_delimited(resource, 'address.postalCode')
           values = value.split(/(?<!\\),/).each { |str| str.gsub!('\,', ',') }
           match_found = values_found.any? { |value_in_resource| values.include? value_in_resource }
           assert match_found, "address-postalcode in Location/#{resource.id} (#{values_found}) does not match address-postalcode requested (#{value})"
 
         when 'address-state'
-          values_found = resolve_path(resource, 'address.state')
+          values_found = resolve_path_comma_delimited(resource, 'address.state')
           values = value.split(/(?<!\\),/).each { |str| str.gsub!('\,', ',') }
           match_found = values_found.any? { |value_in_resource| values.include? value_in_resource }
           assert match_found, "address-state in Location/#{resource.id} (#{values_found}) does not match address-state requested (#{value})"
 
         when 'address-use'
-          values_found = resolve_path(resource, 'address.use')
+          values_found = resolve_path_comma_delimited(resource, 'address.use')
           values = value.split(/(?<!\\),/).each { |str| str.gsub!('\,', ',') }
           match_found = values_found.any? { |value_in_resource| values.include? value_in_resource }
           assert match_found, "address-use in Location/#{resource.id} (#{values_found}) does not match address-use requested (#{value})"
@@ -118,9 +118,11 @@ module Inferno
           versions :r4
         end
 
+        _id_value = resolve_element_from_paths_comma_delimited(@resource_found, 'id') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          '_id': get_value_for_search_param(resolve_element_from_path(@resource_found, 'id') { |el| get_value_for_search_param(el).present? })
+          '_id': get_value_for_search_param(_id_value)
         }
+
         skip 'Could not find parameter value for ["_id"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('Location'), search_params)
@@ -147,9 +149,11 @@ module Inferno
           versions :r4
         end
 
+        _lastUpdated_value = resolve_element_from_paths_comma_delimited(@resource_found, 'meta.lastUpdated') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          '_lastUpdated': get_value_for_search_param(resolve_element_from_path(@resource_found, 'meta.lastUpdated') { |el| get_value_for_search_param(el).present? })
+          '_lastUpdated': get_value_for_search_param(_lastUpdated_value)
         }
+
         skip 'Could not find parameter value for ["_lastUpdated"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('Location'), search_params)
@@ -176,9 +180,11 @@ module Inferno
           versions :r4
         end
 
+        name_value = resolve_element_from_paths_comma_delimited(@resource_found, 'name,alias') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          'name': get_value_for_search_param(resolve_element_from_path(@resource_found, 'name') { |el| get_value_for_search_param(el).present? })
+          'name': get_value_for_search_param(name_value)
         }
+
         skip 'Could not find parameter value for ["name"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('Location'), search_params)
@@ -205,9 +211,11 @@ module Inferno
           versions :r4
         end
 
+        identifier_value = resolve_element_from_paths_comma_delimited(@resource_found, 'identifier') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          'identifier': get_value_for_search_param(resolve_element_from_path(@resource_found, 'identifier') { |el| get_value_for_search_param(el).present? })
+          'identifier': get_value_for_search_param(identifier_value)
         }
+
         skip 'Could not find parameter value for ["identifier"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('Location'), search_params)
@@ -234,9 +242,11 @@ module Inferno
           versions :r4
         end
 
+        address_value = resolve_element_from_paths_comma_delimited(@resource_found, 'address') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          'address': get_value_for_search_param(resolve_element_from_path(@resource_found, 'address') { |el| get_value_for_search_param(el).present? })
+          'address': get_value_for_search_param(address_value)
         }
+
         skip 'Could not find parameter value for ["address"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('Location'), search_params)
@@ -263,9 +273,11 @@ module Inferno
           versions :r4
         end
 
+        address_city_value = resolve_element_from_paths_comma_delimited(@resource_found, 'address.city') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          'address-city': get_value_for_search_param(resolve_element_from_path(@resource_found, 'address.city') { |el| get_value_for_search_param(el).present? })
+          'address-city': get_value_for_search_param(address_city_value)
         }
+
         skip 'Could not find parameter value for ["address-city"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('Location'), search_params)
@@ -292,9 +304,11 @@ module Inferno
           versions :r4
         end
 
+        address_country_value = resolve_element_from_paths_comma_delimited(@resource_found, 'address.country') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          'address-country': get_value_for_search_param(resolve_element_from_path(@resource_found, 'address.country') { |el| get_value_for_search_param(el).present? })
+          'address-country': get_value_for_search_param(address_country_value)
         }
+
         skip 'Could not find parameter value for ["address-country"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('Location'), search_params)
@@ -321,9 +335,11 @@ module Inferno
           versions :r4
         end
 
+        address_postalcode_value = resolve_element_from_paths_comma_delimited(@resource_found, 'address.postalCode') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          'address-postalcode': get_value_for_search_param(resolve_element_from_path(@resource_found, 'address.postalCode') { |el| get_value_for_search_param(el).present? })
+          'address-postalcode': get_value_for_search_param(address_postalcode_value)
         }
+
         skip 'Could not find parameter value for ["address-postalcode"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('Location'), search_params)
@@ -350,9 +366,11 @@ module Inferno
           versions :r4
         end
 
+        address_state_value = resolve_element_from_paths_comma_delimited(@resource_found, 'address.state') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          'address-state': get_value_for_search_param(resolve_element_from_path(@resource_found, 'address.state') { |el| get_value_for_search_param(el).present? })
+          'address-state': get_value_for_search_param(address_state_value)
         }
+
         skip 'Could not find parameter value for ["address-state"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('Location'), search_params)
@@ -379,9 +397,11 @@ module Inferno
           versions :r4
         end
 
+        address_use_value = resolve_element_from_paths_comma_delimited(@resource_found, 'address.use') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          'address-use': get_value_for_search_param(resolve_element_from_path(@resource_found, 'address.use') { |el| get_value_for_search_param(el).present? })
+          'address-use': get_value_for_search_param(address_use_value)
         }
+
         skip 'Could not find parameter value for ["address-use"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('Location'), search_params)

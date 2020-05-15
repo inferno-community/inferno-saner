@@ -78,15 +78,14 @@ module Inferno
         search_validators = ''
         sequence[:search_param_descriptions].each do |element, definition|
           type = definition[:type]
-          path = definition[:path]
-            .gsub(/(?<!\w)class(?!\w)/, 'local_class')
-            .split('.')
-            .drop(1)
-            .join('.')
-          path += get_value_path_by_type(type) unless ['Period', 'date', 'HumanName', 'Address'].include? type
+          paths = definition[:expression]
+            .map { |expression| expression.gsub(/(?<!\w)class(?!\w)/, 'local_class')}
+            .map { |expression| expression.split('.').slice(1..-1).join('.')}
+            .map { |expression| ['Period', 'date', 'HumanName', 'Address'].include?(type) ? expression : expression + get_value_path_by_type(type) }
+
           search_validators += %(
               when '#{element}'
-              values_found = resolve_path(resource, '#{path}')
+              values_found = resolve_path_comma_delimited(resource, '#{paths.join(',')}')
               #{search_param_match_found_code(type, element)}
               assert match_found, "#{element} in #{sequence[:resource]}/\#{resource.id} (\#{values_found}) does not match #{element} requested (\#{value})"
             )

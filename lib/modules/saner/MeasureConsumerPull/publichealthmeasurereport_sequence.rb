@@ -19,41 +19,41 @@ module Inferno
         case property
 
         when '_id'
-          values_found = resolve_path(resource, 'id')
+          values_found = resolve_path_comma_delimited(resource, 'id')
           values = value.split(/(?<!\\),/).each { |str| str.gsub!('\,', ',') }
           match_found = values_found.any? { |value_in_resource| values.include? value_in_resource }
           assert match_found, "_id in MeasureReport/#{resource.id} (#{values_found}) does not match _id requested (#{value})"
 
         when 'code'
-          values_found = resolve_path(resource, 'group.code.coding.code')
+          values_found = resolve_path_comma_delimited(resource, 'group.code.coding.code,group.population.code.coding.code,group.stratifier.code.coding.code,group.stratifier.stratum.component.code.coding.code,group.stratifier.stratum.population.code.coding.code')
           values = value.split(/(?<!\\),/).each { |str| str.gsub!('\,', ',') }
           match_found = values_found.any? { |value_in_resource| values.include? value_in_resource }
           assert match_found, "code in MeasureReport/#{resource.id} (#{values_found}) does not match code requested (#{value})"
 
         when 'date'
-          values_found = resolve_path(resource, 'date')
+          values_found = resolve_path_comma_delimited(resource, 'date')
           values = value.split(/(?<!\\),/).each { |str| str.gsub!('\,', ',') }
           match_found = values_found.any? { |value_in_resource| values.include? value_in_resource }
           assert match_found, "date in MeasureReport/#{resource.id} (#{values_found}) does not match date requested (#{value})"
 
         when 'measure'
-          values_found = resolve_path(resource, 'measure')
+          values_found = resolve_path_comma_delimited(resource, 'measure')
           values = value.split(/(?<!\\),/).each { |str| str.gsub!('\,', ',') }
           match_found = values_found.any? { |value_in_resource| values.include? value_in_resource }
           assert match_found, "measure in MeasureReport/#{resource.id} (#{values_found}) does not match measure requested (#{value})"
 
         when 'subject'
-          values_found = resolve_path(resource, 'subject.reference')
+          values_found = resolve_path_comma_delimited(resource, 'subject.reference')
           match_found = values_found.any? { |reference| [value, 'Patient/' + value].include? reference }
           assert match_found, "subject in MeasureReport/#{resource.id} (#{values_found}) does not match subject requested (#{value})"
 
         when 'period'
-          values_found = resolve_path(resource, 'period')
+          values_found = resolve_path_comma_delimited(resource, 'period')
           match_found = values_found.any? { |date| validate_date_search(value, date) }
           assert match_found, "period in MeasureReport/#{resource.id} (#{values_found}) does not match period requested (#{value})"
 
         when 'reporter'
-          values_found = resolve_path(resource, 'reporter.reference')
+          values_found = resolve_path_comma_delimited(resource, 'reporter.reference')
           values = value.split(/(?<!\\),/).each { |str| str.gsub!('\,', ',') }
           match_found = values_found.any? { |value_in_resource| values.include? value_in_resource }
           assert match_found, "reporter in MeasureReport/#{resource.id} (#{values_found}) does not match reporter requested (#{value})"
@@ -94,9 +94,11 @@ module Inferno
           versions :r4
         end
 
+        _id_value = resolve_element_from_paths_comma_delimited(@resource_found, 'id') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          '_id': get_value_for_search_param(resolve_element_from_path(@resource_found, 'id') { |el| get_value_for_search_param(el).present? })
+          '_id': get_value_for_search_param(_id_value)
         }
+
         skip 'Could not find parameter value for ["_id"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('MeasureReport'), search_params)
@@ -123,9 +125,11 @@ module Inferno
           versions :r4
         end
 
+        date_value = resolve_element_from_paths_comma_delimited(@resource_found, 'date') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          'date': get_value_for_search_param(resolve_element_from_path(@resource_found, 'date') { |el| get_value_for_search_param(el).present? })
+          'date': get_value_for_search_param(date_value)
         }
+
         skip 'Could not find parameter value for ["date"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('MeasureReport'), search_params)
@@ -152,9 +156,11 @@ module Inferno
           versions :r4
         end
 
+        measure_value = resolve_element_from_paths_comma_delimited(@resource_found, 'measure') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          'measure': get_value_for_search_param(resolve_element_from_path(@resource_found, 'measure') { |el| get_value_for_search_param(el).present? })
+          'measure': get_value_for_search_param(measure_value)
         }
+
         skip 'Could not find parameter value for ["measure"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('MeasureReport'), search_params)
@@ -181,9 +187,11 @@ module Inferno
           versions :r4
         end
 
+        subject_value = resolve_element_from_paths_comma_delimited(@resource_found, 'subject') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          'subject': get_value_for_search_param(resolve_element_from_path(@resource_found, 'subject') { |el| get_value_for_search_param(el).present? })
+          'subject': get_value_for_search_param(subject_value)
         }
+
         skip 'Could not find parameter value for ["subject"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('MeasureReport'), search_params)
@@ -210,9 +218,11 @@ module Inferno
           versions :r4
         end
 
+        period_value = resolve_element_from_paths_comma_delimited(@resource_found, 'period') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          'period': get_value_for_search_param(resolve_element_from_path(@resource_found, 'period') { |el| get_value_for_search_param(el).present? })
+          'period': get_value_for_search_param(period_value)
         }
+
         skip 'Could not find parameter value for ["period"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('MeasureReport'), search_params)
@@ -239,9 +249,11 @@ module Inferno
           versions :r4
         end
 
+        reporter_value = resolve_element_from_paths_comma_delimited(@resource_found, 'reporter') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          'reporter': get_value_for_search_param(resolve_element_from_path(@resource_found, 'reporter') { |el| get_value_for_search_param(el).present? })
+          'reporter': get_value_for_search_param(reporter_value)
         }
+
         skip 'Could not find parameter value for ["reporter"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('MeasureReport'), search_params)
@@ -269,9 +281,11 @@ module Inferno
           versions :r4
         end
 
+        code_value = resolve_element_from_paths_comma_delimited(@resource_found, 'group.code,group.population.code,group.stratifier.code,group.stratifier.stratum.component.code,group.stratifier.stratum.population.code') { |el| get_value_for_search_param(el).present? }
         search_params = {
-          'code': get_value_for_search_param(resolve_element_from_path(@resource_found, 'group.code') { |el| get_value_for_search_param(el).present? })
+          'code': get_value_for_search_param(code_value)
         }
+
         skip 'Could not find parameter value for ["code"] to search by.' if search_params.any? { |_param, value| value.nil? }
 
         reply = get_resource_by_params(versioned_resource_class('MeasureReport'), search_params)

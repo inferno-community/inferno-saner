@@ -347,11 +347,13 @@ module Inferno
           path = path.gsub(/.where\((.*)/, '')
           as_type = path.scan(/.as\((.*?)\)/).flatten.first
           path = path.gsub(/.as\((.*?)\)/, capitalize_first_letter(as_type)) if as_type.present?
+          expression = search_param_definition['expression'].split('|').map(&:strip).select { |expression| [sequence[:resource], 'Resource'].include? expression.split('.').first }
           profile_element = profile_definition['snapshot']['element'].select { |el| el['id'] == path }.first
           param_metadata = {
             path: path,
             comparators: {},
-            values: Set.new
+            values: Set.new,
+            expression: expression
           }
           if !profile_element.nil?
             param_metadata[:type] = profile_element['type'].first['code']
